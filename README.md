@@ -1,4 +1,4 @@
-# Flekkens reisedagbok
+# Flekkens reisedagbok 
 
 En interaktiv visuell reisedagbok for skolemaskoten, bygget som en statisk nettside for GitHub Pages.
 
