@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 39 35% 92%;
+    --foreground: 25 30% 20%;
+    --card: 40 40% 95%;
+    --card-foreground: 25 30% 20%;
+    --popover: 40 40% 95%;
+    --popover-foreground: 25 30% 20%;
+    --primary: 25 55% 35%;
+    --primary-foreground: 40 40% 95%;
+    --secondary: 35 30% 82%;
+    --secondary-foreground: 25 30% 20%;
+    --muted: 35 20% 88%;
+    --muted-foreground: 25 15% 45%;
+    --accent: 15 60% 50%;
+    --accent-foreground: 40 40% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 30 20% 78%;
+    --input: 30 20% 78%;
+    --ring: 25 55% 35%;
+    --radius: 0.5rem;
+    --leather: 15 45% 22%;
+    --paper: 42 50% 90%;
+    --paper-dark: 38 35% 82%;
+    --stamp: 0 60% 45%;
+    --ink: 220 25% 25%;
+    --font-display: 'Caveat', cursive;
+    --font-body: 'Nunito', sans-serif;
+    --shadow-book: 0 8px 32px -8px hsl(25 30% 20% / 0.3), 0 2px 8px -2px hsl(25 30% 20% / 0.15);
+    --shadow-photo: 2px 3px 8px hsl(25 30% 20% / 0.25);
+    --shadow-page: inset 0 0 30px hsl(30 20% 70% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .book-page {
+    background-image: url('/Flekkens_eventyr/images/paper-bg.jpg');
+    background-size: cover;
+    box-shadow: var(--shadow-page);
+  }
+
+  .book-cover {
+    background-image: url('/Flekkens_eventyr/images/leather-bg.jpg');
+    background-size: cover;
+    box-shadow: var(--shadow-book);
+  }
+
+  .photo-frame {
+    box-shadow: var(--shadow-photo);
+    border: 3px solid hsl(var(--paper-dark));
+    background: hsl(var(--card));
+    padding: 6px;
+  }
+
+  .fun-fact-box {
+    background: hsl(var(--paper) / 0.9);
+    border: 2px dashed hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .nav-btn {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-family: var(--font-body);
+    font-weight: 700;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius);
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .nav-btn:hover {
+    background: hsl(var(--accent));
+    transform: translateY(-1px);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .tape-decoration {
+    position: relative;
+  }
+
+  .tape-decoration::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    width: 60px;
+    height: 16px;
+    background: hsl(40 60% 85% / 0.7);
+    border-radius: 2px;
+  }
+}
