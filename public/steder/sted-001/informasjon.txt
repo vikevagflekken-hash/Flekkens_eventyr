@@ -1,0 +1,12 @@
+id: wroclaw-rynek
+tittel: Wrocław – Rynek
+land: Polen
+by: Wrocław
+sted: Rynek
+dato: 2025-09-12
+beskrivelse: Wrocław er en vakker by i Nedre Schlesien. Torget er hjertet av byen, fullt av fargerike bygårder og det historiske rådhuset. Wrocław kalles også «Broenes by» fordi den har over 120 broer!
+morsom_fakta: I Wrocław bor det nisser! Små dvergfigurer kan finnes over hele byen.
+breddegrad: 51.109
+lengdegrad: 17.032
+rekkefolge: 1
+forsidebilde: 1.jpg

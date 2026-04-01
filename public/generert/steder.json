@@ -1,0 +1,38 @@
+[
+  {
+    "id": "wroclaw-rynek",
+    "mappe": "sted-001",
+    "tittel": "Wrocław – Rynek",
+    "land": "Polen",
+    "by": "Wrocław",
+    "sted": "Rynek",
+    "dato": "2025-09-12",
+    "beskrivelse": "Wrocław er en vakker by i Nedre Schlesien. Torget er hjertet av byen, fullt av fargerike bygårder og det historiske rådhuset. Wrocław kalles også «Broenes by» fordi den har over 120 broer!",
+    "morsom_fakta": "I Wrocław bor det nisser! Små dvergfigurer kan finnes over hele byen.",
+    "breddegrad": 51.109,
+    "lengdegrad": 17.032,
+    "rekkefolge": 1,
+    "forsidebilde": "steder/sted-001/1.jpg",
+    "bilder": [
+      "steder/sted-001/1.jpg"
+    ]
+  },
+  {
+    "id": "praha-karlsbroen",
+    "mappe": "sted-002",
+    "tittel": "Praha – Karlsbroen",
+    "land": "Tsjekkia",
+    "by": "Praha",
+    "sted": "Karlsbroen",
+    "dato": "2025-09-15",
+    "beskrivelse": "Praha er Tsjekkias hovedstad og en av Europas vakreste byer. Karlsbroen er en historisk steinbro over Moldau-elven, prydet med vakre statuer. Byen kalles «Den gylne stad» på grunn av sine mange spir og kupler.",
+    "morsom_fakta": "Karlsbroen ble bygget i 1357 og har 30 vakre statuer langs sidene!",
+    "breddegrad": 50.0865,
+    "lengdegrad": 14.4114,
+    "rekkefolge": 2,
+    "forsidebilde": "steder/sted-002/1.jpg",
+    "bilder": [
+      "steder/sted-002/1.jpg"
+    ]
+  }
+]
