@@ -89,6 +89,28 @@ export default function HoyreSide({ steder, aktivtSted, onVelgSted }: Props) {
     };
   }, [stederMedKoord]);
 
+
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+
+    const refreshMap = () => {
+      window.requestAnimationFrame(() => {
+        map.invalidateSize();
+      });
+    };
+
+    refreshMap();
+    const timeoutId = window.setTimeout(refreshMap, 150);
+    window.addEventListener("resize", refreshMap);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("resize", refreshMap);
+    };
+  }, [aktivtSted.id, mapMode, stederMedKoord.length]);
+
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
@@ -106,6 +128,7 @@ export default function HoyreSide({ steder, aktivtSted, onVelgSted }: Props) {
     } catch {
       // ignore storage errors
     }
+    map.invalidateSize();
   }, [mapMode]);
 
   useEffect(() => {
@@ -177,6 +200,8 @@ export default function HoyreSide({ steder, aktivtSted, onVelgSted }: Props) {
         opacity: 0.8,
       }).addTo(map);
     }
+
+    map.invalidateSize();
 
     if (aktivtSted.breddegrad != null && aktivtSted.lengdegrad != null) {
       map.flyTo(

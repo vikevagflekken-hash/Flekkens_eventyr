@@ -58,7 +58,7 @@ export default function Dagbok() {
 
   return (
     <div
-      className="min-h-[100svh] flex flex-col items-center justify-center px-3 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 relative"
+      className="min-h-[100svh] overflow-y-auto flex flex-col items-center justify-start px-3 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 relative"
       style={{
         backgroundImage: `url('${BASE}images/map-bg.jpg')`,
         backgroundSize: "cover",
@@ -74,7 +74,7 @@ export default function Dagbok() {
         </h1>
 
         <div className="book-cover w-full rounded-xl p-2 md:p-3 lg:p-4 shadow-xl">
-          <div className="flex flex-col lg:grid lg:grid-cols-[1.05fr_8px_0.95fr] gap-0 h-[78svh] min-h-[620px] max-h-[960px]">
+          <div className="flex flex-col lg:grid lg:grid-cols-[1.05fr_8px_0.95fr] gap-0 min-h-[560px] lg:h-[70svh] lg:max-h-[860px]">
             <div className="min-h-0 rounded-l-lg lg:rounded-l-lg rounded-t-lg lg:rounded-t-none overflow-hidden">
               <VenstreSide sted={aktivtSted} />
             </div>
