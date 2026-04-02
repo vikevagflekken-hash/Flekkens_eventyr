@@ -1,0 +1,10 @@
+tittel: Randaberg - Indian Spices
+land: Norge
+by: Randaberg
+sted: Indian Spices
+dato: 2026-03-22
+beskrivelse: Flekken var på Indian Spices i Randaberg. Der fikk han se spennende indisk mat med fine farger og gode lukter. Det var et koselig sted, og Flekken syntes maten så veldig spennende ut.
+morsom_fakta: På Indian Spices kan man smake mat med krydder fra India. Restauranten ligger i Vistnesveien 5 i Randaberg.
+breddegrad: 58.998880274349446
+lengdegrad: 5.616926398250644
+rekkefolge: 1

@@ -1,0 +1,10 @@
+tittel: Krakow - E.Wedel Rynek Główny
+land: Polen
+by: Krakow
+sted: Pijalnia Czekolady E.Wedel, Rynek Główny
+dato: 2026-03-22
+beskrivelse: Besøk i Pijalnia Czekolady E.Wedel på Rynek Główny i Kraków. Dette er et koselig sted midt i hjertet av gamlebyen, kjent for varm sjokolade, desserter og kaffe. På bildet kan man se drikkemenyen og myke kosedyr som sitter ved bordet, noe som gir scenen en varm og leken stemning.
+morsom_fakta: Pijalnia E.Wedel i Kraków ligger direkte ved Rynek Główny 46, altså på en av de mest kjente adressene i sentrum. Wedel-merket har tradisjoner helt tilbake til 1851.
+breddegrad: 50.062256
+lengdegrad: 19.938894
+rekkefolge: 3
