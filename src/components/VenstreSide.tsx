@@ -7,6 +7,12 @@ interface Props {
   sted: Sted;
 }
 
+type ImageMeta = {
+  naturalWidth: number;
+  naturalHeight: number;
+  isPortrait: boolean;
+};
+
 const BASE = import.meta.env.BASE_URL;
 const EDIT_PASSWORD = "flekken";
 const DEFAULT_SETTINGS: BildeInnstilling = { x: 50, y: 50, scale: 1 };
@@ -31,6 +37,17 @@ function normalizeSettings(value?: Partial<BildeInnstilling> | null): BildeInnst
   };
 }
 
+function getStableTilt(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+
+  const normalized = ((hash % 7) + 7) % 7; // 0..6
+  const tilt = (normalized - 3) * 0.8; // -2.4 .. 2.4
+  return tilt === 0 ? 0.8 : tilt;
+}
+
 export default function VenstreSide({ sted }: Props) {
   const startIndex = useMemo(() => {
     if (!sted.bilder.length) return 0;
@@ -44,17 +61,51 @@ export default function VenstreSide({ sted }: Props) {
   const [secretBuffer, setSecretBuffer] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [imageSettings, setImageSettings] = useState<BildeInnstilling>(DEFAULT_SETTINGS);
-  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const dragStateRef = useRef<{ startX: number; startY: number; initial: BildeInnstilling } | null>(null);
 
   useEffect(() => {
     setValgtBildeIndex(startIndex);
     setEditMode(false);
     setSecretBuffer("");
+    setIsLightboxOpen(false);
   }, [startIndex, sted.id]);
 
   const valgtBildePath = sted.bilder.length > 0 ? sted.bilder[valgtBildeIndex] : null;
   const valgtBilde = valgtBildePath ? `${BASE}${valgtBildePath}` : null;
+  const tiltDeg = useMemo(
+    () => getStableTilt(`${sted.id}:${valgtBildePath ?? "empty"}`),
+    [sted.id, valgtBildePath],
+  );
+
+  useEffect(() => {
+    if (!valgtBilde) {
+      setImageMeta(null);
+      return;
+    }
+
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const naturalWidth = img.naturalWidth || 1;
+      const naturalHeight = img.naturalHeight || 1;
+      setImageMeta({
+        naturalWidth,
+        naturalHeight,
+        isPortrait: naturalHeight > naturalWidth,
+      });
+    };
+    img.onerror = () => {
+      if (!cancelled) setImageMeta(null);
+    };
+    img.src = valgtBilde;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [valgtBilde]);
 
   useEffect(() => {
     if (!valgtBildePath) {
@@ -102,6 +153,11 @@ export default function VenstreSide({ sted }: Props) {
         target?.isContentEditable;
 
       if (isTypingTarget) return;
+
+      if (event.key === "Escape" && isLightboxOpen) {
+        setIsLightboxOpen(false);
+        return;
+      }
 
       if (!editMode) {
         if (event.key.length === 1) {
@@ -170,165 +226,186 @@ export default function VenstreSide({ sted }: Props) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editMode, imageSettings, secretBuffer, valgtBildeIndex, valgtBildePath]);
-
-  const harMorsomFakta = Boolean(sted.morsom_fakta?.trim());
+  }, [editMode, imageSettings, isLightboxOpen, secretBuffer, valgtBildeIndex, valgtBildePath]);
 
   useEffect(() => {
-    if (!valgtBilde) {
-      setImageAspectRatio(null);
-      return;
-    }
+    if (!isLightboxOpen) return;
 
-    let cancelled = false;
-    const img = new window.Image();
-    img.onload = () => {
-      if (cancelled) return;
-      const ratio = img.naturalWidth > 0 && img.naturalHeight > 0
-        ? img.naturalWidth / img.naturalHeight
-        : null;
-      setImageAspectRatio(ratio);
-    };
-    img.onerror = () => {
-      if (!cancelled) setImageAspectRatio(null);
-    };
-    img.src = valgtBilde;
-
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      cancelled = true;
+      document.body.style.overflow = previousOverflow;
     };
-  }, [valgtBilde]);
+  }, [isLightboxOpen]);
 
-  const isPortraitImage = imageAspectRatio !== null && imageAspectRatio < 0.9;
-  const photoFrameClassName = isPortraitImage
-    ? "w-full max-w-[300px] md:max-w-[340px] lg:max-w-[380px]"
-    : "w-full max-w-md";
-  const photoViewportClassName = isPortraitImage
-    ? "relative w-full h-[320px] md:h-[380px] lg:h-[460px] rounded-sm overflow-hidden bg-muted/20"
-    : "relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-muted/20";
-  const imageObjectFit = isPortraitImage ? "contain" : "cover";
-
+  const harMorsomFakta = Boolean(sted.morsom_fakta?.trim());
+  const isPortrait = Boolean(imageMeta?.isPortrait);
+  const frameOuterClass = isPortrait
+    ? "w-full max-w-[320px] md:max-w-[360px] lg:max-w-[380px]"
+    : "w-full max-w-md lg:max-w-xl";
+  const imageViewportClass = isPortrait
+    ? "relative w-full h-[380px] md:h-[460px] lg:h-[520px] rounded-sm overflow-hidden bg-[#efe8dc]"
+    : "relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-[#efe8dc]";
+  const imageClass = isPortrait
+    ? "w-full h-full select-none object-contain"
+    : "w-full h-full select-none object-cover";
+  const frameStyle = {
+    transform: `rotate(${tiltDeg}deg)`,
+  };
 
   return (
-    <div className="book-page flex flex-col h-full p-4 md:p-5 lg:p-6 overflow-hidden">
-      <div className="shrink-0">
-        <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground text-center mb-1 leading-tight">
-          {sted.tittel}
-        </h2>
+    <>
+      <div className="book-page flex flex-col h-full p-4 md:p-5 lg:p-6 overflow-hidden">
+        <div className="shrink-0">
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl text-foreground text-center mb-1 leading-tight">
+            {sted.tittel}
+          </h2>
 
-        {(sted.dato || sted.by || sted.land) && (
-          <p className="text-center text-muted-foreground font-body text-sm md:text-base mb-3">
-            {sted.by ? `${sted.by}` : ""}
-            {sted.by && sted.land ? ", " : ""}
-            {sted.land ? `${sted.land}` : ""}
-            {(sted.by || sted.land) && sted.dato ? " · " : ""}
-            {sted.dato ? sted.dato : ""}
-          </p>
-        )}
+          {(sted.dato || sted.by || sted.land) && (
+            <p className="text-center text-muted-foreground font-body text-sm md:text-base mb-3">
+              {sted.by ? `${sted.by}` : ""}
+              {sted.by && sted.land ? ", " : ""}
+              {sted.land ? `${sted.land}` : ""}
+              {(sted.by || sted.land) && sted.dato ? " · " : ""}
+              {sted.dato ? sted.dato : ""}
+            </p>
+          )}
+        </div>
+
+        <div className="shrink-0">
+          {valgtBilde ? (
+            <div className={`mx-auto mb-3 ${frameOuterClass}`} style={frameStyle}>
+              <div className="rounded-md bg-[#f7f3ea] p-3 shadow-[0_12px_24px_rgba(70,45,20,0.22)] ring-1 ring-black/10 transition-transform duration-300 hover:scale-[1.01]">
+                <div
+                  className={imageViewportClass}
+                  onClick={() => {
+                    setSecretBuffer("");
+                    if (!editMode) setIsLightboxOpen(true);
+                  }}
+                  onWheel={(event) => {
+                    if (!editMode) return;
+                    event.preventDefault();
+                    const delta = event.deltaY > 0 ? -SCALE_STEP : SCALE_STEP;
+                    updateSettings((current) => ({ ...current, scale: current.scale + delta }));
+                  }}
+                  onMouseDown={(event) => {
+                    if (!editMode) return;
+                    event.preventDefault();
+                    dragStateRef.current = {
+                      startX: event.clientX,
+                      startY: event.clientY,
+                      initial: imageSettings,
+                    };
+                  }}
+                  onMouseMove={(event) => {
+                    if (!editMode || !dragStateRef.current) return;
+                    const dx = event.clientX - dragStateRef.current.startX;
+                    const dy = event.clientY - dragStateRef.current.startY;
+                    const box = event.currentTarget.getBoundingClientRect();
+                    const dxPct = (dx / box.width) * 100;
+                    const dyPct = (dy / box.height) * 100;
+                    const next = normalizeSettings({
+                      ...dragStateRef.current.initial,
+                      x: dragStateRef.current.initial.x - dxPct,
+                      y: dragStateRef.current.initial.y - dyPct,
+                    });
+                    setImageSettings(next);
+                  }}
+                  onMouseUp={() => {
+                    if (!editMode || !dragStateRef.current) return;
+                    persistSettings(imageSettings);
+                    dragStateRef.current = null;
+                  }}
+                  onMouseLeave={() => {
+                    if (!editMode || !dragStateRef.current) return;
+                    persistSettings(imageSettings);
+                    dragStateRef.current = null;
+                  }}
+                  style={{ cursor: editMode ? "grab" : "zoom-in" }}
+                  title={editMode ? "Tryb edycji kadru aktywny" : "Kliknij, aby powiększyć zdjęcie"}
+                >
+                  <img
+                    src={valgtBilde}
+                    alt={sted.tittel}
+                    draggable={false}
+                    className={imageClass}
+                    style={{
+                      objectPosition: `${imageSettings.x}% ${imageSettings.y}%`,
+                      transform: `scale(${imageSettings.scale})`,
+                      transformOrigin: "center center",
+                    }}
+                  />
+                  {editMode ? (
+                    <div className="absolute inset-x-2 bottom-2 rounded bg-black/55 px-2 py-1 text-[11px] text-white">
+                      Edycja: przeciągnij, kółko myszy lub +/- , strzałki, 0 reset, C kopiuj, Esc wyjdź
+                    </div>
+                  ) : (
+                    <div className="absolute bottom-2 right-2 rounded-full bg-black/40 px-2 py-1 text-[11px] text-white/95 backdrop-blur-sm">
+                      Kliknij, aby powiększyć
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="photo-frame mx-auto mb-3 w-full max-w-md">
+              <div className="w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm bg-muted flex items-center justify-center">
+                <span className="text-muted-foreground font-body text-sm">
+                  Ingen bilder
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 mb-3">
+          <BildeGalleri
+            bilder={sted.bilder}
+            tittel={sted.tittel}
+            valgtIndex={valgtBildeIndex}
+            onVelg={setValgtBildeIndex}
+          />
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          {sted.beskrivelse?.trim() ? (
+            <p className="font-body text-foreground text-sm md:text-base leading-relaxed mb-3">
+              {sted.beskrivelse}
+            </p>
+          ) : (
+            <p className="font-body text-muted-foreground text-sm md:text-base mb-3">
+              Ingen beskrivelse.
+            </p>
+          )}
+
+          {harMorsomFakta ? <MorsomFakta tekst={sted.morsom_fakta!.trim()} /> : null}
+        </div>
       </div>
 
-      <div className="shrink-0">
-        {valgtBilde ? (
-          <div className={`photo-frame tape-decoration mx-auto mb-3 ${photoFrameClassName}`}>
-            <div
-              className={photoViewportClassName}
-              onClick={() => {
-                setSecretBuffer("");
-              }}
-              onWheel={(event) => {
-                if (!editMode) return;
-                event.preventDefault();
-                const delta = event.deltaY > 0 ? -SCALE_STEP : SCALE_STEP;
-                updateSettings((current) => ({ ...current, scale: current.scale + delta }));
-              }}
-              onMouseDown={(event) => {
-                if (!editMode) return;
-                event.preventDefault();
-                dragStateRef.current = {
-                  startX: event.clientX,
-                  startY: event.clientY,
-                  initial: imageSettings,
-                };
-              }}
-              onMouseMove={(event) => {
-                if (!editMode || !dragStateRef.current) return;
-                const dx = event.clientX - dragStateRef.current.startX;
-                const dy = event.clientY - dragStateRef.current.startY;
-                const box = event.currentTarget.getBoundingClientRect();
-                const dxPct = (dx / box.width) * 100;
-                const dyPct = (dy / box.height) * 100;
-                const next = normalizeSettings({
-                  ...dragStateRef.current.initial,
-                  x: dragStateRef.current.initial.x - dxPct,
-                  y: dragStateRef.current.initial.y - dyPct,
-                });
-                setImageSettings(next);
-              }}
-              onMouseUp={() => {
-                if (!editMode || !dragStateRef.current) return;
-                persistSettings(imageSettings);
-                dragStateRef.current = null;
-              }}
-              onMouseLeave={() => {
-                if (!editMode || !dragStateRef.current) return;
-                persistSettings(imageSettings);
-                dragStateRef.current = null;
-              }}
-              style={{ cursor: editMode ? "grab" : "default" }}
-              title={editMode ? "Tryb edycji kadru aktywny" : undefined}
+      {isLightboxOpen && valgtBilde ? (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <div className="relative max-w-[92vw] max-h-[92vh]" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white/95 text-black shadow-lg"
+              onClick={() => setIsLightboxOpen(false)}
+              aria-label="Zamknij podgląd zdjęcia"
             >
+              ×
+            </button>
+            <div className="rounded-xl bg-[#f7f3ea] p-3 shadow-2xl ring-1 ring-white/10">
               <img
                 src={valgtBilde}
                 alt={sted.tittel}
-                draggable={false}
-                className="w-full h-full select-none"
-                style={{
-                  objectFit: imageObjectFit,
-                  objectPosition: `${imageSettings.x}% ${imageSettings.y}%`,
-                  transform: `scale(${imageSettings.scale})`,
-                  transformOrigin: "center center",
-                }}
+                className="max-w-[86vw] max-h-[82vh] object-contain rounded-md"
               />
-              {editMode ? (
-                <div className="absolute inset-x-2 bottom-2 rounded bg-black/55 px-2 py-1 text-[11px] text-white">
-                  Edycja: przeciągnij, kółko myszy lub +/- , strzałki, 0 reset, C kopiuj, Esc wyjdź
-                </div>
-              ) : null}
             </div>
           </div>
-        ) : (
-          <div className="photo-frame mx-auto mb-3 w-full max-w-md">
-            <div className="w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground font-body text-sm">
-                Ingen bilder
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="shrink-0 mb-3">
-        <BildeGalleri
-          bilder={sted.bilder}
-          tittel={sted.tittel}
-          valgtIndex={valgtBildeIndex}
-          onVelg={setValgtBildeIndex}
-        />
-      </div>
-
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-        {sted.beskrivelse?.trim() ? (
-          <p className="font-body text-foreground text-sm md:text-base leading-relaxed mb-3">
-            {sted.beskrivelse}
-          </p>
-        ) : (
-          <p className="font-body text-muted-foreground text-sm md:text-base mb-3">
-            Ingen beskrivelse.
-          </p>
-        )}
-
-        {harMorsomFakta ? <MorsomFakta tekst={sted.morsom_fakta!.trim()} /> : null}
-      </div>
-    </div>
+        </div>
+      ) : null}
+    </>
   );
 }
