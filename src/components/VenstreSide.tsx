@@ -240,18 +240,132 @@ export default function VenstreSide({ sted }: Props) {
 
   const harMorsomFakta = Boolean(sted.morsom_fakta?.trim());
   const isPortrait = Boolean(imageMeta?.isPortrait);
+  const portraitAspectRatio = imageMeta ? imageMeta.naturalWidth / imageMeta.naturalHeight : 0.72;
+
   const frameOuterClass = isPortrait
-    ? "w-full max-w-[320px] md:max-w-[360px] lg:max-w-[380px]"
+    ? "w-full max-w-[220px] md:max-w-[240px] lg:max-w-[250px]"
     : "w-full max-w-md lg:max-w-xl";
   const imageViewportClass = isPortrait
-    ? "relative w-full h-[380px] md:h-[460px] lg:h-[520px] rounded-sm overflow-hidden bg-[#efe8dc]"
-    : "relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-[#efe8dc]";
+    ? "relative w-full rounded-sm overflow-hidden bg-[#e7dfd2]"
+    : "relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-[#e7dfd2]";
   const imageClass = isPortrait
-    ? "w-full h-full select-none object-contain"
+    ? "w-full h-full select-none object-cover"
     : "w-full h-full select-none object-cover";
   const frameStyle = {
     transform: `rotate(${tiltDeg}deg)`,
   };
+
+  const photoBlock = valgtBilde ? (
+    <div className={`mx-auto ${frameOuterClass}`} style={frameStyle}>
+      <div className="rounded-md bg-[#f7f3ea] p-2 shadow-[0_12px_24px_rgba(70,45,20,0.22)] ring-1 ring-black/10 transition-transform duration-300 hover:scale-[1.01]">
+        <div
+          className={imageViewportClass}
+          onClick={() => {
+            setSecretBuffer("");
+            if (!editMode) setIsLightboxOpen(true);
+          }}
+          onWheel={(event) => {
+            if (!editMode) return;
+            event.preventDefault();
+            const delta = event.deltaY > 0 ? -SCALE_STEP : SCALE_STEP;
+            updateSettings((current) => ({ ...current, scale: current.scale + delta }));
+          }}
+          onMouseDown={(event) => {
+            if (!editMode) return;
+            event.preventDefault();
+            dragStateRef.current = {
+              startX: event.clientX,
+              startY: event.clientY,
+              initial: imageSettings,
+            };
+          }}
+          onMouseMove={(event) => {
+            if (!editMode || !dragStateRef.current) return;
+            const dx = event.clientX - dragStateRef.current.startX;
+            const dy = event.clientY - dragStateRef.current.startY;
+            const box = event.currentTarget.getBoundingClientRect();
+            const dxPct = (dx / box.width) * 100;
+            const dyPct = (dy / box.height) * 100;
+            const next = normalizeSettings({
+              ...dragStateRef.current.initial,
+              x: dragStateRef.current.initial.x - dxPct,
+              y: dragStateRef.current.initial.y - dyPct,
+            });
+            setImageSettings(next);
+          }}
+          onMouseUp={() => {
+            if (!editMode || !dragStateRef.current) return;
+            persistSettings(imageSettings);
+            dragStateRef.current = null;
+          }}
+          onMouseLeave={() => {
+            if (!editMode || !dragStateRef.current) return;
+            persistSettings(imageSettings);
+            dragStateRef.current = null;
+          }}
+          style={{
+            cursor: editMode ? "grab" : "zoom-in",
+            aspectRatio: isPortrait ? `${portraitAspectRatio}` : undefined,
+          }}
+          title={editMode ? "Tryb edycji kadru aktywny" : "Kliknij, aby powiększyć zdjęcie"}
+        >
+          <img
+            src={valgtBilde}
+            alt={sted.tittel}
+            draggable={false}
+            className={imageClass}
+            style={{
+              objectPosition: `${imageSettings.x}% ${imageSettings.y}%`,
+              transform: `scale(${imageSettings.scale})`,
+              transformOrigin: "center center",
+            }}
+          />
+          {editMode ? (
+            <div className="absolute inset-x-2 bottom-2 rounded bg-black/55 px-2 py-1 text-[11px] text-white">
+              Edycja: przeciągnij, kółko myszy lub +/- , strzałki, 0 reset, C kopiuj, Esc wyjdź
+            </div>
+          ) : (
+            <div className="absolute bottom-2 right-2 rounded-full bg-black/40 px-2 py-1 text-[11px] text-white/95 backdrop-blur-sm">
+              Kliknij, aby powiększyć
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="photo-frame mx-auto w-full max-w-md">
+      <div className="w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm bg-muted flex items-center justify-center">
+        <span className="text-muted-foreground font-body text-sm">Ingen bilder</span>
+      </div>
+    </div>
+  );
+
+  const galleryBlock = (
+    <div className="mt-3">
+      <BildeGalleri
+        bilder={sted.bilder}
+        tittel={sted.tittel}
+        valgtIndex={valgtBildeIndex}
+        onVelg={setValgtBildeIndex}
+      />
+    </div>
+  );
+
+  const textBlock = (
+    <div className="min-w-0">
+      {sted.beskrivelse?.trim() ? (
+        <p className="font-body text-foreground text-sm md:text-base leading-relaxed mb-3">
+          {sted.beskrivelse}
+        </p>
+      ) : (
+        <p className="font-body text-muted-foreground text-sm md:text-base mb-3">
+          Ingen beskrivelse.
+        </p>
+      )}
+
+      {harMorsomFakta ? <MorsomFakta tekst={sted.morsom_fakta!.trim()} /> : null}
+    </div>
+  );
 
   return (
     <>
@@ -272,125 +386,37 @@ export default function VenstreSide({ sted }: Props) {
           )}
         </div>
 
-        <div className="shrink-0">
-          {valgtBilde ? (
-            <div className={`mx-auto mb-3 ${frameOuterClass}`} style={frameStyle}>
-              <div className="rounded-md bg-[#f7f3ea] p-3 shadow-[0_12px_24px_rgba(70,45,20,0.22)] ring-1 ring-black/10 transition-transform duration-300 hover:scale-[1.01]">
-                <div
-                  className={imageViewportClass}
-                  onClick={() => {
-                    setSecretBuffer("");
-                    if (!editMode) setIsLightboxOpen(true);
-                  }}
-                  onWheel={(event) => {
-                    if (!editMode) return;
-                    event.preventDefault();
-                    const delta = event.deltaY > 0 ? -SCALE_STEP : SCALE_STEP;
-                    updateSettings((current) => ({ ...current, scale: current.scale + delta }));
-                  }}
-                  onMouseDown={(event) => {
-                    if (!editMode) return;
-                    event.preventDefault();
-                    dragStateRef.current = {
-                      startX: event.clientX,
-                      startY: event.clientY,
-                      initial: imageSettings,
-                    };
-                  }}
-                  onMouseMove={(event) => {
-                    if (!editMode || !dragStateRef.current) return;
-                    const dx = event.clientX - dragStateRef.current.startX;
-                    const dy = event.clientY - dragStateRef.current.startY;
-                    const box = event.currentTarget.getBoundingClientRect();
-                    const dxPct = (dx / box.width) * 100;
-                    const dyPct = (dy / box.height) * 100;
-                    const next = normalizeSettings({
-                      ...dragStateRef.current.initial,
-                      x: dragStateRef.current.initial.x - dxPct,
-                      y: dragStateRef.current.initial.y - dyPct,
-                    });
-                    setImageSettings(next);
-                  }}
-                  onMouseUp={() => {
-                    if (!editMode || !dragStateRef.current) return;
-                    persistSettings(imageSettings);
-                    dragStateRef.current = null;
-                  }}
-                  onMouseLeave={() => {
-                    if (!editMode || !dragStateRef.current) return;
-                    persistSettings(imageSettings);
-                    dragStateRef.current = null;
-                  }}
-                  style={{ cursor: editMode ? "grab" : "zoom-in" }}
-                  title={editMode ? "Tryb edycji kadru aktywny" : "Kliknij, aby powiększyć zdjęcie"}
-                >
-                  <img
-                    src={valgtBilde}
-                    alt={sted.tittel}
-                    draggable={false}
-                    className={imageClass}
-                    style={{
-                      objectPosition: `${imageSettings.x}% ${imageSettings.y}%`,
-                      transform: `scale(${imageSettings.scale})`,
-                      transformOrigin: "center center",
-                    }}
-                  />
-                  {editMode ? (
-                    <div className="absolute inset-x-2 bottom-2 rounded bg-black/55 px-2 py-1 text-[11px] text-white">
-                      Edycja: przeciągnij, kółko myszy lub +/- , strzałki, 0 reset, C kopiuj, Esc wyjdź
-                    </div>
-                  ) : (
-                    <div className="absolute bottom-2 right-2 rounded-full bg-black/40 px-2 py-1 text-[11px] text-white/95 backdrop-blur-sm">
-                      Kliknij, aby powiększyć
-                    </div>
-                  )}
-                </div>
+        {isPortrait ? (
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,250px)_minmax(0,1fr)] lg:gap-5 lg:items-start">
+              <div className="shrink-0">
+                {photoBlock}
+                {galleryBlock}
               </div>
+              <div className="min-w-0 lg:pt-2">{textBlock}</div>
             </div>
-          ) : (
-            <div className="photo-frame mx-auto mb-3 w-full max-w-md">
-              <div className="w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm bg-muted flex items-center justify-center">
-                <span className="text-muted-foreground font-body text-sm">
-                  Ingen bilder
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="shrink-0 mb-3">
-          <BildeGalleri
-            bilder={sted.bilder}
-            tittel={sted.tittel}
-            valgtIndex={valgtBildeIndex}
-            onVelg={setValgtBildeIndex}
-          />
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-          {sted.beskrivelse?.trim() ? (
-            <p className="font-body text-foreground text-sm md:text-base leading-relaxed mb-3">
-              {sted.beskrivelse}
-            </p>
-          ) : (
-            <p className="font-body text-muted-foreground text-sm md:text-base mb-3">
-              Ingen beskrivelse.
-            </p>
-          )}
-
-          {harMorsomFakta ? <MorsomFakta tekst={sted.morsom_fakta!.trim()} /> : null}
-        </div>
+          </div>
+        ) : (
+          <>
+            <div className="shrink-0 mb-3">{photoBlock}</div>
+            <div className="shrink-0 mb-3">{galleryBlock}</div>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">{textBlock}</div>
+          </>
+        )}
       </div>
 
       {isLightboxOpen && valgtBilde ? (
         <div
-          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 isolate"
           onClick={() => setIsLightboxOpen(false)}
         >
-          <div className="relative max-w-[92vw] max-h-[92vh]" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="relative max-w-[94vw] max-h-[94vh]"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               type="button"
-              className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white/95 text-black shadow-lg"
+              className="absolute -top-3 -right-3 z-10 h-10 w-10 rounded-full bg-white/95 text-black shadow-lg"
               onClick={() => setIsLightboxOpen(false)}
               aria-label="Zamknij podgląd zdjęcia"
             >
@@ -400,7 +426,7 @@ export default function VenstreSide({ sted }: Props) {
               <img
                 src={valgtBilde}
                 alt={sted.tittel}
-                className="max-w-[86vw] max-h-[82vh] object-contain rounded-md"
+                className="block max-w-[88vw] max-h-[84vh] object-contain rounded-md"
               />
             </div>
           </div>
