@@ -44,6 +44,7 @@ export default function VenstreSide({ sted }: Props) {
   const [secretBuffer, setSecretBuffer] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [imageSettings, setImageSettings] = useState<BildeInnstilling>(DEFAULT_SETTINGS);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const dragStateRef = useRef<{ startX: number; startY: number; initial: BildeInnstilling } | null>(null);
 
   useEffect(() => {
@@ -173,6 +174,41 @@ export default function VenstreSide({ sted }: Props) {
 
   const harMorsomFakta = Boolean(sted.morsom_fakta?.trim());
 
+  useEffect(() => {
+    if (!valgtBilde) {
+      setImageAspectRatio(null);
+      return;
+    }
+
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const ratio = img.naturalWidth > 0 && img.naturalHeight > 0
+        ? img.naturalWidth / img.naturalHeight
+        : null;
+      setImageAspectRatio(ratio);
+    };
+    img.onerror = () => {
+      if (!cancelled) setImageAspectRatio(null);
+    };
+    img.src = valgtBilde;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [valgtBilde]);
+
+  const isPortraitImage = imageAspectRatio !== null && imageAspectRatio < 0.9;
+  const photoFrameClassName = isPortraitImage
+    ? "w-full max-w-[300px] md:max-w-[340px] lg:max-w-[380px]"
+    : "w-full max-w-md";
+  const photoViewportClassName = isPortraitImage
+    ? "relative w-full h-[320px] md:h-[380px] lg:h-[460px] rounded-sm overflow-hidden bg-muted/20"
+    : "relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-muted/20";
+  const imageObjectFit = isPortraitImage ? "contain" : "cover";
+
+
   return (
     <div className="book-page flex flex-col h-full p-4 md:p-5 lg:p-6 overflow-hidden">
       <div className="shrink-0">
@@ -193,9 +229,9 @@ export default function VenstreSide({ sted }: Props) {
 
       <div className="shrink-0">
         {valgtBilde ? (
-          <div className="photo-frame tape-decoration mx-auto mb-3 w-full max-w-md">
+          <div className={`photo-frame tape-decoration mx-auto mb-3 ${photoFrameClassName}`}>
             <div
-              className="relative w-full h-[220px] md:h-[250px] lg:h-[280px] rounded-sm overflow-hidden bg-muted/20"
+              className={photoViewportClassName}
               onClick={() => {
                 setSecretBuffer("");
               }}
@@ -247,7 +283,7 @@ export default function VenstreSide({ sted }: Props) {
                 draggable={false}
                 className="w-full h-full select-none"
                 style={{
-                  objectFit: "cover",
+                  objectFit: imageObjectFit,
                   objectPosition: `${imageSettings.x}% ${imageSettings.y}%`,
                   transform: `scale(${imageSettings.scale})`,
                   transformOrigin: "center center",
