@@ -3,7 +3,7 @@ land: Norge / Polen
 by: Stavanger / Krakow
 sted: På flyet fra Stavanger til Krakow
 dato: 2026-03-22
-beskrivelse: Flekken reiste med fly fra Stavanger til Krakow. Han satt ved vinduet sammen med glad Albert og så ut på himmelen. Det var spennende å starte reisen og fly til en ny by.
+beskrivelse: Albert og Flekken er klare for tur til Polen. Flekken fikk bli med på flyet!
 morsom_fakta: Når et fly flyr høyt oppe i himmelen, kan det noen ganger være kaldere enn minus 50 grader utenfor flyet.
 breddegrad: 58.88268662231373
 lengdegrad: 5.626726198602821
