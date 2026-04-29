@@ -3,7 +3,7 @@ land: Polen
 by: Krakow
 sted: Restauracja Smakołyki
 dato: 2026-03-22
-beskrivelse: Flekken var i restauranten Smakołyki i Krakow. Der så han en jente som spiste deilige pierogi. Det var koselig å sitte inne og ta en liten pause med god mat.
+beskrivelse: Albert og Flekken besøkte restauranten Smakołyki i Kraków. Der smakte de på deilige polske pierogi – og Flekken syntes visst at de var veldig gode!
 morsom_fakta: På Smakołyki kan man spise tradisjonell polsk mat, og restauranten ligger veldig nær den gamle bydelen i Krakow. breddegrad: 50.0589
 lengdegrad: 19.9328
 rekkefolge: 5
