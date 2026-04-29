@@ -3,7 +3,7 @@ land: Polen
 by: Krakow
 sted: Rynek Główny
 dato: 2026-03-22
-beskrivelse: Flekken besøkte det store torget i Krakow. Der så han Mariakirken, Sukiennice, mange mennesker og masse duer. Det var en fin og solrik dag, og Flekken koste seg midt i den gamle byen.
+beskrivelse: Det var full fart på Rynek Główny i Kraków! Albert løp etter duene, mens Flekken satt trygt og fulgte spent med.
 morsom_fakta: Rynek Główny i Krakow er et av de største gamle bytorgene i Europa. Hver time spilles også en kjent melodi fra tårnet i Mariakirken.
 breddegrad: 50.0617
 lengdegrad: 19.9382
